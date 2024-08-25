@@ -30,7 +30,7 @@ const AddProductPage: React.FC = () => {
 
   useEffect(() => {
     if (type) {
-      axios.get<APIResponse>(`https://amad.totalh.net/api/requests/getTypeInput.php?typeId=${type}`)
+      axios.get<APIResponse>(`https://amad.devdot.ba/requests/getTypeInput.php?typeId=${type}`)
         .then(response => {
           if (!response.data.success) {
             // Handle failure case
@@ -147,7 +147,7 @@ const AddProductPage: React.FC = () => {
       attributeValue: attributes.length === 1 ? attributes[0][1] : formattedAttributes,
     };
 
-    axios.post<{ success: boolean; message?: string }>('https://amad.totalh.net/api/requests/addProduct.php', newProduct)
+    axios.post<{ success: boolean; message?: string }>('https://amad.devdot.ba/requests/addProduct.php', newProduct)
       .then(response => {
         if (response.data.success) {
           navigate('/');

@@ -9,7 +9,7 @@ const IndexPage: React.FC = () => {
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
 
   useEffect(() => {
-    axios.get<APIResponse>('https://amad.totalh.net/api/requests/getProducts.php')
+    axios.get<APIResponse>('https://amad.devdot.ba/requests/getProducts.php')
       .then(response => {
         try {
           const data = response.data.data;
@@ -35,7 +35,7 @@ const IndexPage: React.FC = () => {
   };
 
   const handleMassHardDelete = () => {
-    axios.post('https://amad.totalh.net/api/requests/massHardDelete.php', {
+    axios.post('https://amad.devdot.ba/requests/massHardDelete.php', {
       productIds: selectedProducts,
     })
     .then(response => {
