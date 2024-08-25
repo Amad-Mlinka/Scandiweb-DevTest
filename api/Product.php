@@ -1,4 +1,6 @@
 <?php
+require_once '../models/Response.php';
+
 abstract class Product {
 
     /* Attributes */
@@ -92,87 +94,124 @@ abstract class Product {
     public static function fetchAll() {
         $db = Database::getInstance()->getConnection();
         $allProducts = [];
-        
-        $sqlFetchProducts = "SELECT * FROM product WHERE active = 1";
-        $fetchedProducts = $db->query($sqlFetchProducts)->fetchAll(PDO::FETCH_ASSOC);
-        
-        if (!$fetchedProducts) {
-            throw new Exception("Error loading products.");
-        }
-        
-        $sqlFetchProductTypes = "SELECT id, title FROM product_type";
-        $fetchedProductTypes = $db->query($sqlFetchProductTypes)->fetchAll(PDO::FETCH_ASSOC);
-        
-        if (!$fetchedProductTypes) {
-            throw new Exception("Error loading product types.");
-        }
-        
-        $productTypes = [];
-        foreach ($fetchedProductTypes as $type) {
-            $productTypes[$type['id']] = $type['title'];
-        }
-        
-        foreach ($fetchedProducts as $product) {
-            $productId = $product['id'];
-        
-            $sqlFetchProductDetails = "SELECT attribute, value FROM product_details WHERE product_id = :productId";
-            $stmtDetails = $db->prepare($sqlFetchProductDetails);
-            $stmtDetails->bindParam(':productId', $productId, PDO::PARAM_INT);
-            $stmtDetails->execute();
-            $fetchedProductDetails = $stmtDetails->fetchAll(PDO::FETCH_ASSOC);
-            
-            $typeName = null;
-            foreach ($fetchedProductDetails as $detail) {
-                if ($detail['attribute'] === 'typeID') {
-                    $typeId = $detail['value'];
-                    $typeName = $productTypes[$typeId];
-                    break;
+        $response = new Response();
+    
+        try {
+            $sqlFetchProducts = "SELECT * FROM product WHERE active = 1";
+            $fetchedProducts = $db->query($sqlFetchProducts)->fetchAll(PDO::FETCH_ASSOC);
+    
+            if (!$fetchedProducts) {
+                throw new Exception("Error loading products.");
+            }
+    
+            $sqlFetchProductTypes = "SELECT id, title FROM product_type";
+            $fetchedProductTypes = $db->query($sqlFetchProductTypes)->fetchAll(PDO::FETCH_ASSOC);
+    
+            if (!$fetchedProductTypes) {
+                throw new Exception("Error loading product types.");
+            }
+    
+            $productTypes = [];
+            foreach ($fetchedProductTypes as $type) {
+                $productTypes[$type['id']] = $type['title'];
+            }
+    
+            foreach ($fetchedProducts as $product) {
+                $productId = $product['id'];
+    
+                $sqlFetchProductDetails = "SELECT attribute, value FROM product_details WHERE product_id = :productId";
+                $stmtDetails = $db->prepare($sqlFetchProductDetails);
+                $stmtDetails->bindParam(':productId', $productId, PDO::PARAM_INT);
+                $stmtDetails->execute();
+                $fetchedProductDetails = $stmtDetails->fetchAll(PDO::FETCH_ASSOC);
+    
+                $typeName = null;
+                foreach ($fetchedProductDetails as $detail) {
+                    if ($detail['attribute'] === 'typeID') {
+                        $typeId = $detail['value'];
+                        $typeName = $productTypes[$typeId];
+                        break;
+                    }
+                }
+    
+                if ($typeName) {
+                    $productClass = ucfirst($typeName);
+                    if (class_exists($productClass)) {
+                        $data = [
+                            'id' => $productId, 
+                            'SKU' => $product['SKU'], 
+                            'name' => $product['name'], 
+                            'price' => $product['price'],
+                            'active' => $product['active'],
+                            'typeID' => $detail['value'],
+                        ];
+                        $productInstance = new $productClass($data);
+                        $productInstance->fetchSpecificAttributes($productId);
+    
+                        $allProducts[] = $productInstance->toArray();
+                    } else {
+                        throw new Exception("Product class $productClass does not exist.");
+                    }
                 }
             }
-            
-            if ($typeName) {
-                $productClass = ucfirst($typeName);
-                if (class_exists($productClass)) {
-                    $data = [
-                        'id' => $productId, 
-                        'SKU' => $product['SKU'], 
-                        'name' => $product['name'], 
-                        'price' => $product['price'],
-                        'active' => $product['active'],
-                        'typeID' => $detail['value'],
-                    ];
-                    $productInstance = new $productClass($data);
-                    $productInstance->fetchSpecificAttributes($productId);
-                    
-                    $allProducts[] = $productInstance->toArray();
-                } else {
-                    throw new Exception("Product class $productClass does not exist.");
-                }
-            }
-        }       
-        return json_encode($allProducts);
+    
+            $response->setSuccess(true);
+            $response->setData($allProducts);
+            $response->setMessage("Products fetched successfully.");
+        } catch (Exception $e) {
+            $response->setSuccess(false);
+            $response->setError($e->getMessage());
+        }
+    
+        return json_encode($response);
     }
+    
 
     public static function massHardDelete(array $productIds) {
-        if (empty($productIds)) {
-            throw new Exception("No product IDs provided for deletion.");
+        $response = new Response();
+    
+        try {
+            if (empty($productIds)) {
+                $response->setSuccess(false);
+                $response->setMessage("No product IDs provided for deletion.");
+
+                return json_encode($response);
+            }
+    
+            $db = Database::getInstance()->getConnection();
+            $ids = rtrim(str_repeat('?,', count($productIds)), ',');
+            $sql = "DELETE FROM product WHERE id IN ($ids)";
+            $stmt = $db->prepare($sql);
+    
+            if (!$stmt->execute($productIds)) {
+                $response->setSuccess(false);
+                $response->setMessage("Error deleting products.");
+
+                return json_encode($response);
+            }
+    
+            $response->setSuccess(true);
+            $response->setMessage("Products deleted successfully.");
+
+            return json_encode($response);
+
+        } catch (Exception $e) {
+            $response->setSuccess(false);
+            $response->setMessage("An error occurred: " . $e->getMessage());
+            $response->setError($e->getMessage());
+            return json_encode($response);
         }
-
-        $db = Database::getInstance()->getConnection();
-        $ids = rtrim(str_repeat('?,', count($productIds)), ',');
-        $sql = "DELETE FROM product WHERE id IN ($ids)";
-        $stmt = $db->prepare($sql);
-
-        if (!$stmt->execute($productIds)) {
-            throw new Exception("Error deleting products.");
-        }
-
-        return true;
     }
 
     public static function massSoftDelete(array $productIds) {
+    $response = new Response();
+
+    try {
         if (empty($productIds)) {
-            throw new Exception("No product IDs provided for deletion.");
+            $response->setSuccess(false);
+            $response->setMessage("No product IDs provided for deletion.");
+
+            return json_encode($response);
         }
 
         $db = Database::getInstance()->getConnection();
@@ -181,11 +220,25 @@ abstract class Product {
         $stmt = $db->prepare($sql);
 
         if (!$stmt->execute($productIds)) {
-            throw new Exception("Error performing soft delete on products.");
+            $response->setSuccess(false);
+            $response->setMessage("Error performing soft delete on products.");
+
+            return json_encode($response);
         }
 
-        return true;
+        $response->setSuccess(true);
+        $response->setMessage("Products soft-deleted successfully.");
+
+        return json_encode($response);
+
+    } catch (Exception $e) {
+        $response->setSuccess(false);
+        $response->setMessage("An error occurred: " . $e->getMessage());
+        $response->setError($e->getMessage());
+
+        return json_encode($response);
     }
+}
 }
 
 ?>

@@ -1,29 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ProductList from '../components/Products/productsList';
-
-interface Product {
-  id: number;
-  SKU: string;
-  name: string;
-  price: number;
-  active: number;
-  type: string;
-  weight?: string;
-  size?: string;
-  unit?: string;
-  dimensions?: string;
-}
+import Product from '../interfaces/Product';
+import APIResponse from '../interfaces/Response';
 
 const IndexPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);  
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
 
   useEffect(() => {
-    axios.get('http://localhost/scandiweb-test/api/getProducts.php')
+    axios.get<APIResponse>('http://localhost/Scandiweb-DevTest/api/requests/getProducts.php')
       .then(response => {
         try {
-          const data = response.data;
+          const data = response.data.data;
           if (data) setProducts(data);
         } catch (error) {
           console.error('Error parsing response data:', error);
@@ -45,10 +34,27 @@ const IndexPage: React.FC = () => {
     });
   };
 
+  const handleMassHardDelete = () => {
+    axios.post('http://localhost/Scandiweb-DevTest/api/requests/massHardDelete.php', {
+      productIds: selectedProducts,
+    })
+    .then(response => {
+      if (response.data.success) { 
+        const remainingProducts = products.filter(product => !selectedProducts.includes(product.id));
+        setProducts(remainingProducts);
+        setSelectedProducts([]);
+      } else {
+        console.error('Delete failed:', response.data.message);
+      }
+    })
+    .catch(error => {
+      console.error('There was an error deleting the products!', error);
+    });
+  };
 
   return (
     <div>
-      <button className="btn btn-outline-danger ml-2" id='delete-product-btn'>Mass Delete</button>
+      <button className="btn btn-outline-danger ml-2" onClick={handleMassHardDelete} id='delete-product-btn'>Mass Delete</button>
       <ProductList
         products={products}
         selectedProducts={selectedProducts}

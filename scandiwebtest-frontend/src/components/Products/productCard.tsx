@@ -23,8 +23,6 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) => {
   const { SKU, name, price, size, unit, dimensions, weight, type } = product;
 
-  console.log(product)
-
   const typeIcons: Record<string, any> = {
     '1': faCompactDisc,
     '2': faBook,

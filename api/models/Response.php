@@ -1,6 +1,6 @@
 <?php
 
-class Response {
+class Response implements JsonSerializable{
 
     /* Attributes */
 
@@ -55,7 +55,14 @@ class Response {
     }
 
     /* Helpers */
-
+    public function jsonSerialize() {
+        return [
+            'success' => $this->success,
+            'message' => $this->message,
+            'data'    => $this->data,
+            'error'   => $this->error,
+        ];
+    }
 
     /* Operations */
 

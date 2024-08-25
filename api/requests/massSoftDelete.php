@@ -7,22 +7,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit(0);
 }
 
-require_once 'database.php';
-require_once 'Product.php';
+require_once '../database.php';
+require_once '../Product.php';
 
-try {
-    $input = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($input['productIds']) || !is_array($input['productIds'])) {
-        throw new Exception("Invalid input. Expected an array of product IDs.");
-    }
+$input = json_decode(file_get_contents('php://input'), true);
 
-    Product::massSoftDelete($input['productIds']);
-
-    echo json_encode(['status' => 'success', 'message' => 'Products deleted successfully']);
-} catch (Exception $e) {
-    http_response_code(400);
-    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+if (!isset($input['productIds']) || !is_array($input['productIds'])) {
+    throw new Exception("Invalid input. Expected an array of product IDs.");
 }
+
+$massDeleteResponse = Product::massSoftDelete($input['productIds']);
+
+header('Content-Type: application/json');
+echo $massDeleteResponse;
+
 
 ?>
