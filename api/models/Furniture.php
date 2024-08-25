@@ -41,11 +41,32 @@ class Furniture extends Product {
     public function getUnit() {
         return $this->unit;
     }
-    
-    /* Helpers */
 
+    /* Helpers */
+    
+    public function toArray() {
+        $array = parent::toArray();
+        $array['dimensions'] = $this->dimensions;
+        return $array;
+    }
 
     /* Operations */
     
+    protected function fetchSpecificAttributes($productId) {
+        $db = Database::getInstance()->getConnection();
+        $sqlFetchAttributes = "SELECT attribute, value FROM product_details WHERE product_id = :productId AND attribute != 'typeID'";
+        
+        $stmt = $db->prepare($sqlFetchAttributes);
+        $stmt->bindParam(':productId', $productId, PDO::PARAM_INT);
+        $stmt->execute();
+        $detail = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $value = $detail['value'];
+
+        $this->setDimensions($value);
+        
+
+        return $this;
+    }
 }
 ?>

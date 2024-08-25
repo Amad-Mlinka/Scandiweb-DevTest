@@ -1,6 +1,6 @@
 <?php
 abstract class Product {
-    
+
     /* Attributes */
 
     private $id;
@@ -75,10 +75,83 @@ abstract class Product {
     }
 
     /* Helpers */
-
+    
+    public function toArray() {
+        return [
+            'id' => $this->getId(),
+            'SKU' => $this->getSKU(),
+            'name' => $this->getName(),
+            'price' => $this->getPrice(),
+            'active' => $this->getActive(),
+            'type' => $this->getType(),
+        ];
+    }
 
     /* Operations */
 
+    public static function fetchAll() {
+        $db = Database::getInstance()->getConnection();
+        $allProducts = [];
+        
+        $sqlFetchProducts = "SELECT * FROM product WHERE active = 1";
+        $fetchedProducts = $db->query($sqlFetchProducts)->fetchAll(PDO::FETCH_ASSOC);
+        
+        if (!$fetchedProducts) {
+            throw new Exception("Error loading products.");
+        }
+        
+        $sqlFetchProductTypes = "SELECT id, title FROM product_type";
+        $fetchedProductTypes = $db->query($sqlFetchProductTypes)->fetchAll(PDO::FETCH_ASSOC);
+        
+        if (!$fetchedProductTypes) {
+            throw new Exception("Error loading product types.");
+        }
+        
+        $productTypes = [];
+        foreach ($fetchedProductTypes as $type) {
+            $productTypes[$type['id']] = $type['title'];
+        }
+        
+        foreach ($fetchedProducts as $product) {
+            $productId = $product['id'];
+        
+            $sqlFetchProductDetails = "SELECT attribute, value FROM product_details WHERE product_id = :productId";
+            $stmtDetails = $db->prepare($sqlFetchProductDetails);
+            $stmtDetails->bindParam(':productId', $productId, PDO::PARAM_INT);
+            $stmtDetails->execute();
+            $fetchedProductDetails = $stmtDetails->fetchAll(PDO::FETCH_ASSOC);
+            
+            $typeName = null;
+            foreach ($fetchedProductDetails as $detail) {
+                if ($detail['attribute'] === 'typeID') {
+                    $typeId = $detail['value'];
+                    $typeName = $productTypes[$typeId];
+                    break;
+                }
+            }
+            
+            if ($typeName) {
+                $productClass = ucfirst($typeName);
+                if (class_exists($productClass)) {
+                    $data = [
+                        'id' => $productId, 
+                        'SKU' => $product['SKU'], 
+                        'name' => $product['name'], 
+                        'price' => $product['price'],
+                        'active' => $product['active'],
+                        'typeID' => $detail['value'],
+                    ];
+                    $productInstance = new $productClass($data);
+                    $productInstance->fetchSpecificAttributes($productId);
+                    
+                    $allProducts[] = $productInstance->toArray();
+                } else {
+                    throw new Exception("Product class $productClass does not exist.");
+                }
+            }
+        }       
+        return json_encode($allProducts);
+    }
 }
 
 ?>
