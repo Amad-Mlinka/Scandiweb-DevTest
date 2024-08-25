@@ -50,6 +50,18 @@ class Book extends Product {
         return $array;
     }
 
+    protected function validate(): array {
+        $errors = [];
+
+        if (empty($this->getSKU())) $errors[] = 'SKU is required';
+        if (empty($this->getName())) $errors[] = 'Name is required';
+        if (!is_numeric($this->getPrice()) || $this->getPrice() <= 0) $errors[] = 'Price must be a positive number';
+        if (empty($this->getWeight()) || !is_numeric($this->getWeight())) $errors[] = 'Size is required and must be numeric';
+        if (empty($this->getUnit())) $errors[] = 'Unit is required';
+
+        return $errors;
+    }
+
     /* Operations */
 
     protected function fetchSpecificAttributes($productId) {
@@ -67,5 +79,33 @@ class Book extends Product {
         return $this;
     }
 
+    protected function saveSpecificAttributes($productId) {
+        $db = Database::getInstance()->getConnection();
+
+        try {
+            $sql = "INSERT INTO product_details (product_id, attribute, value) VALUES (:product_id, :attribute, :value)";
+            $stmt = $db->prepare($sql);
+
+            $stmt->execute([
+                ':product_id' => $productId,
+                ':attribute' => 'weight',
+                ':value' => $this->getWeight()
+            ]);
+
+            $stmt->execute([
+                ':product_id' => $productId,
+                ':attribute' => 'typeID',
+                ':value' => $this->getType() 
+            ]);
+
+        } catch (Exception $e) {
+            throw new Exception("Error saving book details: " . $e->getMessage());
+        }
+    }
+
+    public function save() {
+        $productId = $this->saveProduct();
+        $this->saveSpecificAttributes($productId);
+    }
 }
 ?>

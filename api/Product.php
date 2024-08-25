@@ -12,6 +12,7 @@ abstract class Product {
     private $price;
     private $type;
 
+
     /* Constructor */
 
     public function __construct(array $data) {
@@ -22,6 +23,13 @@ abstract class Product {
         $this->setActive($data['active'] ?? 1);
         $this->setType($data['typeID'] ?? '');
     }
+
+
+    /* Abstract methods */
+
+    abstract protected function saveSpecificAttributes($productId);
+    abstract protected function fetchSpecificAttributes($productId);
+    abstract protected function validate(): array;
 
 
     /* Setters */
@@ -50,6 +58,7 @@ abstract class Product {
         return $this->type = $type; 
     }
 
+
     /* Getters */
 
     public function getId() {
@@ -76,6 +85,7 @@ abstract class Product {
         return $this->type; 
     }
 
+
     /* Helpers */
     
     public function toArray() {
@@ -89,6 +99,37 @@ abstract class Product {
         ];
     }
 
+    public static function getProductInstanceByTypeID($typeID) {
+        $response = new Response();
+        $db = Database::getInstance()->getConnection();
+    
+        $sql = "SELECT title FROM product_type WHERE id = :typeID";
+        $stmt = $db->prepare($sql);
+        $stmt->bindParam(':typeID', $typeID, PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+        if (!$result) {
+            throw new Exception("Product type with ID $typeID not found.");
+        }
+    
+        $typeName = ucfirst($result['title']);
+    
+        if (class_exists($typeName)) {
+            return new $typeName(['typeID' => $typeID]);
+        } else {
+            throw new Exception("Product class $typeName does not exist.");
+        }
+    }
+
+    public static function skuExists($sku) {
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare("SELECT COUNT(*) FROM product WHERE sku = :sku");
+        $stmt->execute(['sku' => $sku]);
+        return $stmt->fetchColumn() > 0;
+    }
+    
+
     /* Operations */
 
     public static function fetchAll() {
@@ -101,14 +142,20 @@ abstract class Product {
             $fetchedProducts = $db->query($sqlFetchProducts)->fetchAll(PDO::FETCH_ASSOC);
     
             if (!$fetchedProducts) {
-                throw new Exception("Error loading products.");
+                $response->setSuccess(true);
+                $response->setMessage("No products found");
+
+                return json_encode($response);
             }
     
             $sqlFetchProductTypes = "SELECT id, title FROM product_type";
             $fetchedProductTypes = $db->query($sqlFetchProductTypes)->fetchAll(PDO::FETCH_ASSOC);
     
             if (!$fetchedProductTypes) {
-                throw new Exception("Error loading product types.");
+                $response->setSuccess(false);
+                $response->setError("Error loading product types.");
+
+                return json_encode($response);
             }
     
             $productTypes = [];
@@ -150,7 +197,10 @@ abstract class Product {
     
                         $allProducts[] = $productInstance->toArray();
                     } else {
-                        throw new Exception("Product class $productClass does not exist.");
+                        $response->setSuccess(false);
+                        $response->setError("Product class $productClass does not exist.");
+        
+                        return json_encode($response);
                     }
                 }
             }
@@ -165,7 +215,6 @@ abstract class Product {
     
         return json_encode($response);
     }
-    
 
     public static function massHardDelete(array $productIds) {
         $response = new Response();
@@ -193,52 +242,152 @@ abstract class Product {
             $response->setSuccess(true);
             $response->setMessage("Products deleted successfully.");
 
-            return json_encode($response);
 
         } catch (Exception $e) {
             $response->setSuccess(false);
             $response->setMessage("An error occurred: " . $e->getMessage());
             $response->setError($e->getMessage());
-            return json_encode($response);
         }
+        return json_encode($response);
     }
 
     public static function massSoftDelete(array $productIds) {
-    $response = new Response();
+        $response = new Response();
 
-    try {
-        if (empty($productIds)) {
+        try {
+            if (empty($productIds)) {
+                $response->setSuccess(false);
+                $response->setMessage("No product IDs provided for deletion.");
+
+                return json_encode($response);
+            }
+
+            $db = Database::getInstance()->getConnection();
+            $ids = rtrim(str_repeat('?,', count($productIds)), ',');
+            $sql = "UPDATE product SET active = 0 WHERE id IN ($ids)";
+            $stmt = $db->prepare($sql);
+
+            if (!$stmt->execute($productIds)) {
+                $response->setSuccess(false);
+                $response->setMessage("Error performing soft delete on products.");
+
+                return json_encode($response);
+            }
+
+            $response->setSuccess(true);
+            $response->setMessage("Products soft-deleted successfully.");
+
+
+        } catch (Exception $e) {
             $response->setSuccess(false);
-            $response->setMessage("No product IDs provided for deletion.");
-
-            return json_encode($response);
+            $response->setMessage("An error occurred: " . $e->getMessage());
+            $response->setError($e->getMessage());
         }
-
-        $db = Database::getInstance()->getConnection();
-        $ids = rtrim(str_repeat('?,', count($productIds)), ',');
-        $sql = "UPDATE product SET active = 0 WHERE id IN ($ids)";
-        $stmt = $db->prepare($sql);
-
-        if (!$stmt->execute($productIds)) {
-            $response->setSuccess(false);
-            $response->setMessage("Error performing soft delete on products.");
-
-            return json_encode($response);
-        }
-
-        $response->setSuccess(true);
-        $response->setMessage("Products soft-deleted successfully.");
-
         return json_encode($response);
 
-    } catch (Exception $e) {
-        $response->setSuccess(false);
-        $response->setMessage("An error occurred: " . $e->getMessage());
-        $response->setError($e->getMessage());
-
-        return json_encode($response);
     }
-}
+
+    public static function getHtmlForType($typeId) {
+        $response = new Response();
+
+        try{
+            $db = Database::getInstance()->getConnection();
+        
+            $sql = "SELECT input_HTML FROM product_type WHERE id = :typeId";
+            $stmt = $db->prepare($sql);
+            $stmt->bindParam(':typeId', $typeId, PDO::PARAM_INT);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result) {
+                
+                $response->setSuccess(true);
+                $response->setMessage("Fetched input HTML");
+                $response->setData($result['input_HTML']);
+            } else {
+                $response->setSuccess(false);
+                $response->setMessage("Error fetching input html");
+            }
+        } catch (Exception $e) {
+            $response->setSuccess(false);
+            $response->setMessage("An error occurred: " . $e->getMessage());
+            $response->setError($e->getMessage());
+        }
+       
+        return json_encode($response);
+
+    }
+
+    public function saveProduct() {
+        $db = Database::getInstance()->getConnection();
+        $db->beginTransaction();
+
+        try {
+            $sql = "INSERT INTO product (SKU, name, price, active) VALUES (:SKU, :name, :price, :active)";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([
+                ':SKU' => $this->getSKU(),
+                ':name' => $this->getName(),
+                ':price' => $this->getPrice(),
+                ':active' => $this->getActive()
+            ]);
+
+            $productId = $db->lastInsertId();
+            $this->setId($productId);
+
+            $db->commit();
+            return $productId;
+        } catch (Exception $e) {
+            $db->rollBack();
+            throw new Exception("Error saving product: " . $e->getMessage());
+        }
+    }
+
+    public static function saveToDatabase($data){
+        $response = new Response();
+
+        try{
+
+            if(self::skuExists($data['sku'])){
+
+                $response->setSuccess(false);
+                $response->setMessage('SKU already exists');
+                $response->setError('A product with this SKU already exists in the database.');
+
+            }else{
+
+                $productType = self::getProductInstanceByTypeID($data['type']);
+                $productData = [
+                    'SKU' => $data['sku'],
+                    'name' => $data['name'],
+                    'price' => $data['price'],
+                    'active' => 1,
+                    'typeID' => $data['type'],
+                    $data['attributeName'] => $data['attributeValue']
+                ];
+        
+                $product = new $productType($productData);
+                $errors = $product->validate();
+                if(!empty($errors)){
+                    $response->setSuccess(false);
+                    $response->setMessage('Validation Error');
+                    $response->setError($errors);
+                    return $response;  
+                }
+                $product->save();
+
+                $response->setSuccess(true);
+                $response->setMessage('Product succsessfully added');
+                $response->setData($product->toArray());
+
+            }      
+        }catch(Exception $e){
+            $response->setSuccess(false);
+            $response->setError($e->getMessage());
+        }
+
+        return $response;        
+    }
 }
 
 ?>

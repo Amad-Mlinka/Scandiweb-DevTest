@@ -14,7 +14,10 @@ require_once '../Product.php';
 $input = json_decode(file_get_contents('php://input'), true);
 
 if (!isset($input['productIds']) || !is_array($input['productIds'])) {
-    throw new Exception("Invalid input. Expected an array of product IDs.");
+    $response->setSuccess(false);
+    $response->setError('Invalid input. Expected an array of product IDs.');
+    echo json_encode($response);
+    exit();
 }
 
 $massDeleteResponse = Product::massSoftDelete($input['productIds']);

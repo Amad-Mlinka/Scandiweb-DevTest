@@ -52,6 +52,17 @@ class DVD extends Product {
         return $array;
     }
 
+    protected function validate(): array {
+        $errors = [];
+        if (empty($this->getSKU())) $errors[] = 'SKU is required';
+        if (empty($this->getName())) $errors[] = 'Name is required';
+        if (!is_numeric($this->getPrice()) || $this->getPrice() <= 0) $errors[] = 'Price must be a positive number';
+        if (empty($this->getSize()) || !is_numeric($this->getSize())) $errors[] = 'Size is required and must be numeric';
+        if (empty($this->unit)) $errors[] = 'Unit is required';
+
+        return $errors;
+    }
+
     /* Operations */
 
     protected function fetchSpecificAttributes($productId) {
@@ -69,5 +80,35 @@ class DVD extends Product {
         
         return $this;
     }
+
+    protected function saveSpecificAttributes($productId) {
+        $db = Database::getInstance()->getConnection();
+
+        try {
+            $sql = "INSERT INTO product_details (product_id, attribute, value) VALUES (:product_id, :attribute, :value)";
+            $stmt = $db->prepare($sql);
+
+            $stmt->execute([
+                ':product_id' => $productId,
+                ':attribute' => 'size',
+                ':value' => $this->size
+            ]);
+
+           $stmt->execute([
+            ':product_id' => $productId,
+            ':attribute' => 'typeID',
+            ':value' => $this->getType() 
+        ]);
+
+        } catch (Exception $e) {
+            throw new Exception("Error saving DVD details: " . $e->getMessage());
+        }
+    }
+
+    public function save() {
+        $productId = $this->saveProduct();
+        $this->saveSpecificAttributes($productId);
+    }
+    
 }
 ?>
