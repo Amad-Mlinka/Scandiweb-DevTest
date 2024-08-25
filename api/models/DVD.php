@@ -94,11 +94,11 @@ class DVD extends Product {
                 ':value' => $this->size
             ]);
 
-           $stmt->execute([
+            $stmt->execute([
             ':product_id' => $productId,
             ':attribute' => 'typeID',
             ':value' => $this->getType() 
-        ]);
+            ]);
 
         } catch (Exception $e) {
             throw new Exception("Error saving DVD details: " . $e->getMessage());
