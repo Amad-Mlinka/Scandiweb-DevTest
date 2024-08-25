@@ -152,6 +152,40 @@ abstract class Product {
         }       
         return json_encode($allProducts);
     }
+
+    public static function massHardDelete(array $productIds) {
+        if (empty($productIds)) {
+            throw new Exception("No product IDs provided for deletion.");
+        }
+
+        $db = Database::getInstance()->getConnection();
+        $ids = rtrim(str_repeat('?,', count($productIds)), ',');
+        $sql = "DELETE FROM product WHERE id IN ($ids)";
+        $stmt = $db->prepare($sql);
+
+        if (!$stmt->execute($productIds)) {
+            throw new Exception("Error deleting products.");
+        }
+
+        return true;
+    }
+
+    public static function massSoftDelete(array $productIds) {
+        if (empty($productIds)) {
+            throw new Exception("No product IDs provided for deletion.");
+        }
+
+        $db = Database::getInstance()->getConnection();
+        $ids = rtrim(str_repeat('?,', count($productIds)), ',');
+        $sql = "UPDATE product SET active = 0 WHERE id IN ($ids)";
+        $stmt = $db->prepare($sql);
+
+        if (!$stmt->execute($productIds)) {
+            throw new Exception("Error performing soft delete on products.");
+        }
+
+        return true;
+    }
 }
 
 ?>
