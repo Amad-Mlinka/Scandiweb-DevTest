@@ -143,7 +143,7 @@ const AddProductPage: React.FC = () => {
       attributeValue: attributes.length === 1 ? attributes[0][1] : formattedAttributes,
     };
 
-    axios.post<{ success: boolean; message?: string }>('https://amad.devdot.ba/requests/addProduct.php', newProduct)
+    axios.post<APIResponse>('https://amad.devdot.ba/requests/addProduct.php', newProduct)
       .then(response => {
         if (response.data.success) {
           navigate('/');
@@ -224,7 +224,7 @@ const AddProductPage: React.FC = () => {
         <div ref={formRef}></div>
 
         <button type="submit" className="btn btn-primary">Save</button>
-        <button type="submit" className="btn btn-primary" onClick={()=>navigate('/')}>Cancel</button>
+        <button type="button" className="btn btn-primary" onClick={()=>navigate('/')}>Cancel</button>
       </form>
     </div>
   );
