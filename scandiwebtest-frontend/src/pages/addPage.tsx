@@ -59,10 +59,7 @@ const AddProductPage: React.FC = () => {
 
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setType(e.target.value);
-    setSpecificAttributes(prev => ({
-      ...prev,
-      [e.target.name]: "",
-    }));
+    setSpecificAttributes({});
     setHtmlContent('');
     setErrors({});
   };
@@ -135,13 +132,14 @@ const AddProductPage: React.FC = () => {
 
     const attributes = Object.entries(specificAttributes);
     const formattedAttributes = formatAttributes();
+    console.log(formattedAttributes)
     
     const newProduct = {
       sku,
       name,
       price,
       type,
-      attributeName: type === "3" ? 'dimensions' :  type === "2" ? 'book' : "size",
+      attributeName: type === "3" ? 'dimensions' :  type === "2" ? 'weight' : "size",
       attributeValue: attributes.length === 1 ? attributes[0][1] : formattedAttributes,
     };
 
@@ -159,6 +157,7 @@ const AddProductPage: React.FC = () => {
 
   const formatAttributes = (): string | SpecificAttributes => {
     const attributes = Object.entries(specificAttributes);
+    console.log(attributes)
     if (attributes.length === 3) {
       return attributes.map(([_, value]) => value).join('X');
     }

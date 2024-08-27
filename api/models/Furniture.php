@@ -90,7 +90,13 @@ class Furniture extends Product {
 
         if (empty($this->getSKU())) $errors['sku'] = 'SKU is required';
         if (empty($this->getName())) $errors['name'] = 'Name is required';
-        if (!is_numeric($this->getPrice()) || $this->getPrice() <= 0) $errors['price'] = 'Price must be a positive number';
+        if (empty($this->getPrice())) {
+            $errors['price'] = 'Price is required';
+        } elseif (!is_numeric($this->getPrice())) {
+            $errors['price'] = 'Price must be numeric';
+        } elseif($this->getPrice() <= 0){
+            $errors['price'] = 'Price must be a positive number';
+        } 
         if (empty($this->getDimensions())) {
             $errors['dimensions'] = 'Dimensions are required';
         } else {
