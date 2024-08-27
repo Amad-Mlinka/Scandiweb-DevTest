@@ -223,7 +223,8 @@ const AddProductPage: React.FC = () => {
 
         <div ref={formRef}></div>
 
-        <button type="submit" className="btn btn-primary">Add Product</button>
+        <button type="submit" className="btn btn-primary">Save</button>
+        <button type="submit" className="btn btn-primary" onClick={()=>navigate('/')}>Cancel</button>
       </form>
     </div>
   );
