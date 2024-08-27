@@ -24,6 +24,8 @@ const ProductList: React.FC<ProductListProps> = ({ products, selectedProducts, o
 
     return (
         <div className="container">
+            <h1 className='text-white'>Product List</h1>
+            <hr className='text-white'/>
             <div className="row">
                 {products.length === 0 ? (
                     <div className="col-md-12 text-center">
