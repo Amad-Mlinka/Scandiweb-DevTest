@@ -28,7 +28,7 @@ const AddProductPage: React.FC = () => {
 
   useEffect(() => {
     if (type) {
-      axios.get<APIResponse>(`http://localhost/Scandiweb-DevTest/api/requests/getTypeInput.php?typeId=${type}`)
+      axios.get<APIResponse>(`https://amad.devdot.ba/requests/getTypeInput.php?typeId=${type}`)
         .then(response => {
           if (!response.data.success) {
           } else {
@@ -143,7 +143,7 @@ const AddProductPage: React.FC = () => {
       attributeValue: attributes.length === 1 ? attributes[0][1] : formattedAttributes,
     };
 
-    axios.post<{ success: boolean; message?: string }>('http://localhost/Scandiweb-DevTest/api/requests/addProduct.php', newProduct)
+    axios.post<{ success: boolean; message?: string }>('https://amad.devdot.ba/requests/addProduct.php', newProduct)
       .then(response => {
         if (response.data.success) {
           navigate('/');

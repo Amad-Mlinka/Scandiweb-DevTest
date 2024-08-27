@@ -100,7 +100,7 @@ class Furniture extends Product {
         if (empty($this->getDimensions())) {
             $errors['dimensions'] = 'Dimensions are required';
         } else {
-            $dimensions = explode('x', $this->getDimensions());
+            $dimensions = explode('X', $this->getDimensions());
             foreach ($dimensions as $dimension) {
                 if (!is_numeric(trim($dimension))) {
                     $errors['dimensions'] = 'Each part of the dimensions must be numeric';
