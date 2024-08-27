@@ -8,9 +8,9 @@ const Navigation = () => {
   const getTitle = () => {
     switch (location.pathname) {
       case '/':
-        return 'Home';
+        return 'Product List';
       case '/add-product':
-        return 'Add Product';
+        return 'Product Add';
       default:
         return 'My Application';
     }
