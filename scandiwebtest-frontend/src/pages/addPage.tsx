@@ -173,6 +173,7 @@ const AddProductPage: React.FC = () => {
           <label>SKU</label>
           <input
             type="text"
+            id="sku"
             className={`form-control form-control-lg ${errors.sku ? 'is-invalid' : ''}`}
             value={sku}
             onChange={(e) => setSku(e.target.value)}
@@ -184,6 +185,7 @@ const AddProductPage: React.FC = () => {
           <label>Name</label>
           <input
             type="text"
+            id="name"
             className={`form-control form-control-lg ${errors.name ? 'is-invalid' : ''}`}
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -195,6 +197,7 @@ const AddProductPage: React.FC = () => {
           <label>Price</label>
           <input
             type="text"
+            id="price"
             className={`form-control form-control-lg ${errors.price ? 'is-invalid' : ''}`}
             value={price}
             onChange={(e) => setPrice(e.target.value)}
@@ -205,6 +208,7 @@ const AddProductPage: React.FC = () => {
         <div className="form-group">
           <label>Type</label>
           <select
+            id="productType"
             className={`form-control form-control-lg ${errors.type ? 'is-invalid' : ''}`}
             value={type}
             onChange={handleTypeChange}
