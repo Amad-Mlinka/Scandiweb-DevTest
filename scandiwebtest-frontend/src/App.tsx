@@ -7,8 +7,6 @@ import 'font-awesome/css/font-awesome.min.css';
 import Navigation from './components/navigation';
 import IndexPage from './pages';
 import AddProductPage from './pages/addPage';
-import { NotificationProvider } from './contexts/NotificationContext';
-import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 function App() {
   return (
@@ -17,18 +15,12 @@ function App() {
         <Router>
           <Navigation />
           <div className="container">
-          <NotificationProvider>
-
             <Routes>
                 <Route path="/" element={<IndexPage />} />
                 <Route path="/add-product" element={<AddProductPage />} />
-
             </Routes>
-            </NotificationProvider>
-
           </div>
         </Router>
-        <ToastContainer />
       </div>
   );
 }

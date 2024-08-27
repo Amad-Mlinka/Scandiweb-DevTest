@@ -1,7 +1,7 @@
 // NotificationContext.tsx
 import React, { createContext, useContext } from 'react';
 import { toast, Bounce, ToastContent } from 'react-toastify';
-
+/* Already made this when it was changed to no notification messages at all, just removed it from the app */
 interface NotificationContextType {
   notifySuccess: (message: ToastContent) => void;
   notifyError: (message: ToastContent) => void;

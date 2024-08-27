@@ -9,41 +9,70 @@ class DVD extends Product {
 
     /* Constructor */
 
-    public function __construct($data = null) {
+    /**
+     * Constructor for the DVD class
+     * @param array|null $data Optional associative array with initial data
+     */
 
-        if($data != null){
+    public function __construct($data = null) {
+        if ($data != null) {
             $size = isset($data['size']) ? $data['size'] : null;
             $unit = isset($data['unit']) ? $data['unit'] : "MB";
-    
+
             parent::__construct($data);
             $this->setSize($size);
             $this->setUnit($unit);
-        }       
+        }
     }
 
-
     /* Setters */
+
+    /**
+     * Sets the size attribute of the object
+     * @param int $size
+     * @return void
+     */
 
     public function setSize($size) {
         $this->size = $size;
     }
 
+    /**
+     * Sets the unit attribute of the object
+     * @param string $unit
+     * @return void
+     */
+
     public function setUnit($unit) {
         $this->unit = $unit;
     }
 
-
     /* Getters */
+
+    /**
+     * Gets the size attribute of the object
+     * @return int
+     */
 
     public function getSize() {
         return $this->size;
     }
+
+    /**
+     * Gets the unit attribute of the object
+     * @return string
+     */
 
     public function getUnit() {
         return $this->unit;
     }
 
     /* Helpers */
+
+    /**
+     * Converts the object to an associative array
+     * @return array
+     */
 
     public function toArray() {
         $array = parent::toArray();
@@ -52,39 +81,67 @@ class DVD extends Product {
         return $array;
     }
 
+    /**
+     * Validates the DVD object attributes
+     * @return array Associative array of validation errors
+     */
+
     protected function validate(): array {
         $errors = [];
-        if (empty($this->getSKU())) $errors[] = 'SKU is required';
-        if (empty($this->getName())) $errors[] = 'Name is required';
-        if (!is_numeric($this->getPrice()) || $this->getPrice() <= 0) $errors[] = 'Price must be a positive number';
-        if (empty($this->getSize()) || !is_numeric($this->getSize())) $errors[] = 'Size is required and must be numeric';
-        if (empty($this->unit)) $errors[] = 'Unit is required';
+
+        if (empty($this->getSKU())) $errors['sku'] = 'SKU is required';
+        if (empty($this->getName())) $errors['name'] = 'Name is required';
+        if (!is_numeric($this->getPrice()) || $this->getPrice() <= 0) $errors['price'] = 'Price must be a positive number';
+        if (empty($this->getSize())) {
+            $errors['size'] = 'Size is required';
+        } elseif (!is_numeric($this->getSize())) {
+            $errors['size'] = 'Size is required and must be numeric';
+        }
+        if (empty($this->getUnit())) $errors['unit'] = 'Unit is required';
 
         return $errors;
     }
 
     /* Operations */
 
+    /**
+     * Fetches specific attributes for the DVD object from the database
+     * @param int $productId
+     * @return DVD
+     * @throws Exception if there is an error fetching the details
+     */
+
     protected function fetchSpecificAttributes($productId) {
-        $db = Database::getInstance()->getConnection();
-        $sqlFetchAttributes = "SELECT attribute, value FROM product_details WHERE product_id = :productId AND attribute != 'typeID'";
-        $stmt = $db->prepare($sqlFetchAttributes);
-        $stmt->bindParam(':productId', $productId, PDO::PARAM_INT);
-        $stmt->execute();
-        $detail = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $db = Database::getInstance()->getConnection();
 
-        $value = $detail['value'];
+            $sqlFetchAttributes = "SELECT attribute, value FROM product_details WHERE product_id = :productId AND attribute != 'typeID'";
+            $stmt = $db->prepare($sqlFetchAttributes);
+            $stmt->bindParam(':productId', $productId, PDO::PARAM_INT);
+            $stmt->execute();
+            $detail = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $this->setSize($value);
+            $value = $detail['value'];
 
-        
-        return $this;
+            $this->setSize($value);
+
+            return $this;
+        } catch (Exception $e) {
+            throw new Exception("Error fetching DVD details: " . $e->getMessage());
+        }
     }
 
-    protected function saveSpecificAttributes($productId) {
-        $db = Database::getInstance()->getConnection();
+    /**
+     * Saves specific attributes for the DVD object to the database
+     * @param int $productId
+     * @return void
+     * @throws Exception if there is an error saving the details
+     */
 
+    protected function saveSpecificAttributes($productId) {
         try {
+            $db = Database::getInstance()->getConnection();
+
             $sql = "INSERT INTO product_details (product_id, attribute, value) VALUES (:product_id, :attribute, :value)";
             $stmt = $db->prepare($sql);
 
@@ -95,20 +152,23 @@ class DVD extends Product {
             ]);
 
             $stmt->execute([
-            ':product_id' => $productId,
-            ':attribute' => 'typeID',
-            ':value' => $this->getType() 
+                ':product_id' => $productId,
+                ':attribute' => 'typeID',
+                ':value' => $this->getType()
             ]);
-
         } catch (Exception $e) {
             throw new Exception("Error saving DVD details: " . $e->getMessage());
         }
     }
 
+    /**
+     * Saves the DVD object, including specific attributes, to the database
+     * @return void
+     */
+    
     public function save() {
         $productId = $this->saveProduct();
         $this->saveSpecificAttributes($productId);
     }
-    
 }
 ?>

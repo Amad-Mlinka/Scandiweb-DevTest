@@ -1,15 +1,10 @@
 <?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST');
-header('Access-Control-Allow-Headers: Content-Type');
+require_once '../includes/requestHeaders.php';
+require_once '../includes/classes.php';
 
-require_once '../database.php';
-require_once '../Product.php';
-require_once '../models/DVD.php';
-require_once '../models/Book.php';
-require_once '../models/Furniture.php';
-require_once '../models/Response.php'; 
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    exit(0);
+}
 
 $data = json_decode(file_get_contents('php://input'), true);
 $response = new Response();
@@ -18,6 +13,7 @@ if (json_last_error() !== JSON_ERROR_NONE) {
     $response->setSuccess(false);
     $response->setMessage('Invalid JSON input');
     $response->setError('Error parsing JSON input');
+
     echo json_encode($response);
     exit();
 }
@@ -26,6 +22,7 @@ if (!isset($data['sku'], $data['name'], $data['price'], $data['type'], $data['at
     $response->setSuccess(false);
     $response->setMessage('Missing required fields');
     $response->setError('Please provide sku, name, price, type, attributeName, and attributeValue.');
+    
     echo json_encode($response);
     exit();
 }

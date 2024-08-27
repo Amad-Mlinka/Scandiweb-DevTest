@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import APIResponse from '../interfaces/Response';
-import { useNotification } from '../contexts/NotificationContext';
 
 interface SpecificAttributes {
   [key: string]: string;
@@ -23,24 +22,21 @@ const AddProductPage: React.FC = () => {
   const [type, setType] = useState<string>('');
   const [specificAttributes, setSpecificAttributes] = useState<SpecificAttributes>({});
   const [htmlContent, setHtmlContent] = useState<string>('');
-  const { notifySuccess, notifyError } = useNotification();
   const [errors, setErrors] = useState<Errors>({});
   const formRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (type) {
-      axios.get<APIResponse>(`https://amad.devdot.ba/requests/getTypeInput.php?typeId=${type}`)
+      axios.get<APIResponse>(`http://localhost/Scandiweb-DevTest/api/requests/getTypeInput.php?typeId=${type}`)
         .then(response => {
           if (!response.data.success) {
-            // Handle failure case
           } else {
             const html = response.data.data;
             setHtmlContent(html);
           }
         })
         .catch(error => {
-          notifyError("There was an error fetching the type-specific inputs!");
           console.error('There was an error fetching the type-specific inputs!', error);
         });
     }
@@ -63,7 +59,10 @@ const AddProductPage: React.FC = () => {
 
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setType(e.target.value);
-    setSpecificAttributes({});
+    setSpecificAttributes(prev => ({
+      ...prev,
+      [e.target.name]: "",
+    }));
     setHtmlContent('');
     setErrors({});
   };
@@ -80,7 +79,7 @@ const AddProductPage: React.FC = () => {
     }));
   };
 
-  const validateInputs = (): boolean => {
+  const validateInputs = (): boolean => {//I've made both server side and client side validation, implemented both just for showcase
     const newErrors: Errors = {};
   
     if (!sku) newErrors.sku = 'SKU is required';
@@ -125,11 +124,10 @@ const AddProductPage: React.FC = () => {
   
     setErrors(newErrors);
     if (Object.keys(newErrors).length !== 0) {
-      notifyError("Please, submit required data");
     }
     return Object.keys(newErrors).length === 0;
   };
-  
+
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -137,26 +135,24 @@ const AddProductPage: React.FC = () => {
 
     const attributes = Object.entries(specificAttributes);
     const formattedAttributes = formatAttributes();
-
+    
     const newProduct = {
       sku,
       name,
       price,
       type,
-      attributeName: attributes.length === 1 ? attributes[0][0] : 'dimensions',
+      attributeName: type === "3" ? 'dimensions' :  type === "2" ? 'book' : "size",
       attributeValue: attributes.length === 1 ? attributes[0][1] : formattedAttributes,
     };
 
-    axios.post<{ success: boolean; message?: string }>('https://amad.devdot.ba/requests/addProduct.php', newProduct)
+    axios.post<{ success: boolean; message?: string }>('http://localhost/Scandiweb-DevTest/api/requests/addProduct.php', newProduct)
       .then(response => {
         if (response.data.success) {
           navigate('/');
         } else {
-          notifyError(response.data.message);
         }
       })
       .catch(error => {
-        notifyError('There was an error adding the product!');
         console.error('There was an error adding the product!', error);
       });
   };

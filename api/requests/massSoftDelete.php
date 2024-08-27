@@ -1,15 +1,11 @@
 <?php
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+require_once '../includes/requestHeaders.php';
+require_once '../includes/classes.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit(0);
 }
-
-require_once '../database.php';
-require_once '../Product.php';
-
 
 $input = json_decode(file_get_contents('php://input'), true);
 
@@ -22,7 +18,6 @@ if (!isset($input['productIds']) || !is_array($input['productIds'])) {
 
 $massDeleteResponse = Product::massSoftDelete($input['productIds']);
 
-header('Content-Type: application/json');
 echo $massDeleteResponse;
 
 

@@ -7,7 +7,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit(0);
 }
 
-$response = Product::fetchAll();
+$response = Product::getTypes();
 
 echo $response;
 
