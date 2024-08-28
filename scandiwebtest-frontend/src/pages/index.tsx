@@ -55,6 +55,8 @@ const IndexPage: React.FC = () => {
   return (
     <div>
       <button className="btn btn-outline-danger ml-2" onClick={handleMassHardDelete} id='delete-product-btn'>Mass Delete</button>
+      <p className='text-white'>Product List</p>
+
       <ProductList
         products={products}
         selectedProducts={selectedProducts}

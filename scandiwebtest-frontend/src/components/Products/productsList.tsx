@@ -24,7 +24,6 @@ const ProductList: React.FC<ProductListProps> = ({ products, selectedProducts, o
 
     return (
         <div className="container">
-            <p className='text-white'>Product List</p>
             <hr className='text-white'/>
             <div className="row">
                
