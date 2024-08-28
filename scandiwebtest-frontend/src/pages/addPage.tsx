@@ -166,8 +166,6 @@ const AddProductPage: React.FC = () => {
 
   return (
     <div className="container">
-      <p className='text-white'>Product List</p>
-
       <h2 className='text-white'>Add New Product</h2>
       <form onSubmit={handleSubmit} noValidate className='d-flex flex-column gap-4' id="product_form">
         <div className="form-group">
