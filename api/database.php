@@ -1,15 +1,15 @@
 <?php
-
+require_once 'env.php';
 class Database {
     private static $instance = null;
     private $pdo;
 
     private function __construct() {
-        $host = '127.0.0.1';
-        $db = 'scandiweb_test';
-        $user = 'root';
-        $pass = '';
-        $charset = 'utf8mb4';
+        $host = getenv('DB_HOST');
+        $db = getenv('DB_NAME');
+        $user = getenv('DB_USER');
+        $pass = getenv('DB_PASS');
+        $charset = getenv('DB_CHARSET');
 
         $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
         $options = [
