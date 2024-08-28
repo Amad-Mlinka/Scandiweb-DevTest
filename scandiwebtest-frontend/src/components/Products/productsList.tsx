@@ -24,22 +24,18 @@ const ProductList: React.FC<ProductListProps> = ({ products, selectedProducts, o
 
     return (
         <div className="container">
-            <h1 className='text-white'>Product List</h1>
+            <p className='text-white'>Product List</p>
             <hr className='text-white'/>
             <div className="row">
-                {products.length === 0 ? (
-                    <div className="col-md-12 text-center">
-                        <p>No Products Found</p>
-                    </div>
-                ) : (
-                    products.map(product => (
-                        <ProductCard
-                        key={product.id}
-                        product={product}
-                        onSelect={onSelect}
-                        />
-                    ))
-                )}
+               
+                {products.map(product => (
+                    <ProductCard
+                    key={product.id}
+                    product={product}
+                    onSelect={onSelect}
+                    />
+                ))}
+
             </div>
         </div>
     );
