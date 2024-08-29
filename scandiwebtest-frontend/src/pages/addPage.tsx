@@ -132,7 +132,6 @@ const AddProductPage: React.FC = () => {
 
     const attributes = Object.entries(specificAttributes);
     const formattedAttributes = formatAttributes();
-    console.log(formattedAttributes)
     
     const newProduct = {
       sku,
@@ -157,7 +156,6 @@ const AddProductPage: React.FC = () => {
 
   const formatAttributes = (): string | SpecificAttributes => {
     const attributes = Object.entries(specificAttributes);
-    console.log(attributes)
     if (attributes.length === 3) {
       return attributes.map(([_, value]) => value).join('X');
     }

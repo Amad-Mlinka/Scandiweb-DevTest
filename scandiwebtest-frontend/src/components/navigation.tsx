@@ -19,7 +19,6 @@ const Navigation = () => {
   return (
     <Navbar bg="dark" data-bs-theme="dark" sticky="top" expand="lg" className="shadow-sm">
       <div className="container">
-
         <Navbar.Brand as={Link} to="/">
           {getTitle()}
         </Navbar.Brand>
