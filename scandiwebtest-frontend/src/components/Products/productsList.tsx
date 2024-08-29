@@ -69,7 +69,7 @@ const ProductList: React.FC = () => {
     return (
         <div className="container">
             <div className="d-flex flex-row justify-content-between mt-3">
-
+                <h1 className="text-white">Product List</h1>
                 <button className="btn btn-outline-danger ml-2" onClick={handleMassHardDelete} id='delete-product-btn'>Mass Delete</button>
             </div>
 

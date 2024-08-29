@@ -20,7 +20,7 @@ const Navigation = () => {
     <Navbar bg="dark" data-bs-theme="dark" sticky="top" expand="lg" className="shadow-sm">
       <div className="container">
         <Navbar.Brand as={Link} to="/">
-          {getTitle()}
+          Home
         </Navbar.Brand>
         <Nav className="ml-auto">
           <Nav.Link as={Link} to="/">Home</Nav.Link>
