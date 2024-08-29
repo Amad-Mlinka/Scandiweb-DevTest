@@ -6,9 +6,11 @@ const IndexPage: React.FC = () => {
   
 
   return (
-    <div>
+    <>
+      <h1 className="text-white">Product List</h1>
+      <p className="text-white">Product List</p>
       <ProductList/>
-    </div>
+    </>
   );
 };
 
